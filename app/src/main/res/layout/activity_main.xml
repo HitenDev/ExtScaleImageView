@@ -21,11 +21,24 @@
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </android.support.design.widget.AppBarLayout>
+    <RelativeLayout
+        android:clipChildren="false"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
     <me.hiten.extscaleimageview.ExtScaleImageView
+        android:layout_centerInParent="true"
         android:id="@+id/ext_iv"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
         />
+
+        <View
+            android:layout_centerInParent="true"
+            android:background="@drawable/bg_border_red"
+            android:layout_width="150dp"
+            android:layout_height="150dp" />
+    </RelativeLayout>
 
 
 </LinearLayout>
