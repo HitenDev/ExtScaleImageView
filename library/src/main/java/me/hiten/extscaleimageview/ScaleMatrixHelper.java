@@ -13,6 +13,8 @@ class ScaleMatrixHelper {
 
     private ExtScaleImageView mExtScaleImageView;
 
+    private Matrix mTempMatrix;
+
     ScaleMatrixHelper(ExtScaleImageView extScaleImageView) {
         mExtScaleImageView = extScaleImageView;
     }
@@ -51,7 +53,7 @@ class ScaleMatrixHelper {
             return;
         }
 
-        if (!ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP.equals(extScaleType)) {
+        if (!(ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP == extScaleType) && !(ExtScaleImageView.ExtScaleType.FIT_WIDTH_CENTER_TOP_HEIGHT == extScaleType)) {
             cropperPosX = extScaleType.cropperPosX;
             cropperPosY = extScaleType.cropperPosY;
             extScaleType = ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP;
@@ -63,7 +65,7 @@ class ScaleMatrixHelper {
 
         int dWidth = drawable.getIntrinsicWidth();
         int dHeight = drawable.getIntrinsicHeight();
-
+        inMatrix.reset();
         if (ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP.equals(extScaleType)) {
             float scale;
             float dx = 0, dy = 0;
@@ -78,6 +80,15 @@ class ScaleMatrixHelper {
 
             inMatrix.setScale(scale, scale);
             inMatrix.postTranslate(Math.round(dx), Math.round(dy));
+        } else if (ExtScaleImageView.ExtScaleType.FIT_WIDTH_CENTER_TOP_HEIGHT == extScaleType) {
+            float scale;
+            scale = (float) vWidth / (float) dWidth;
+            inMatrix.setScale(scale, scale);
+            int ddHeight = (int) (dHeight * scale+0.5f);
+            if (ddHeight<vHeight) {
+                inMatrix.postTranslate(0,
+                        (vHeight - dHeight*scale) / 2f+0.5f);
+            }
         }
     }
 
@@ -144,9 +155,12 @@ class ScaleMatrixHelper {
     }
 
     private void calculateMatrix() {
-        Matrix matrix = mExtScaleImageView.getImageMatrix();
-        calculateMatrix(matrix, mExtScaleImageView.getExtScaleType(), mExtScaleImageView.getExtCropperPos().x, mExtScaleImageView.getExtCropperPos().y);
-        mExtScaleImageView.setImageMatrix(matrix);
+        if (mTempMatrix==null){
+            mTempMatrix = new Matrix();
+        }
+        mTempMatrix.reset();
+        calculateMatrix(mTempMatrix, mExtScaleImageView.getExtScaleType(), mExtScaleImageView.getExtCropperPos().x, mExtScaleImageView.getExtCropperPos().y);
+        mExtScaleImageView.setImageMatrix(mTempMatrix);
     }
 
 }

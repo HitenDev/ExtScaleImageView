@@ -18,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
@@ -42,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setSupportActionBar(toolbar);
         tvInfo = findViewById(R.id.tv_info);
         extScaleImageView = findViewById(R.id.ext_iv);
-        extScaleImageView.setExtScaleType(ExtScaleImageView.ExtScaleType.ALIGN_LEFT_CROP);
+        extScaleImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         findViewById(R.id.btn_layout_test).setOnClickListener(this);
         nextPic();
         extScaleImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -142,7 +143,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.menu, menu);
         menu.setGroupCheckable(R.id.menu_group_scale_type, true, true);
-        menu.findItem(R.id.menu_type_align_left_crop).setChecked(true);
+        menu.findItem(R.id.menu_type_center_crop).setChecked(true);
         return true;
     }
 
@@ -190,6 +191,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.menu_type_fit_start:
                 extScaleImageView.setScaleType(ImageView.ScaleType.FIT_START);
+                break;
+            case R.id.menu_type_fit_width_center_top_height:
+                extScaleImageView.setExtScaleType(ExtScaleImageView.ExtScaleType.FIT_WIDTH_CENTER_TOP_HEIGHT);
                 break;
         }
         return true;

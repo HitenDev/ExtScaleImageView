@@ -117,7 +117,7 @@ class SmoothSwitchHelper {
         if (extScaleType == null) {
             return false;
         }
-        if (mLastScaleTypeRecord != null && extScaleType.equals(mLastScaleTypeRecord.extScaleType) && mLastScaleTypeRecord.cropperPosX == cropperPosX && mLastScaleTypeRecord.cropperPosY == cropperPosY) {
+        if (mLastScaleTypeRecord != null && extScaleType == mLastScaleTypeRecord.extScaleType && mLastScaleTypeRecord.cropperPosX == cropperPosX && mLastScaleTypeRecord.cropperPosY == cropperPosY) {
             return false;
         }
         if (matrixAnimator != null && matrixAnimator.isRunning()) {
@@ -160,7 +160,7 @@ class SmoothSwitchHelper {
      */
     private void startMatrixAnimator(Matrix imageMatrix, Matrix targetMatrix) {
         matrixAnimator = createMatrixAnimator(mExtScaleImageView, imageMatrix, targetMatrix);
-        matrixAnimator.setDuration(1000);
+        matrixAnimator.setDuration(400);
         matrixAnimator.start();
         matrixAnimator.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -171,7 +171,7 @@ class SmoothSwitchHelper {
                     if (scaleType != null) {
                         mExtScaleImageView.setScaleType(scaleType);
                     } else if (mLastScaleTypeRecord.extScaleType != null) {
-                        if (!mLastScaleTypeRecord.extScaleType.equals(ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP)) {
+                        if (mLastScaleTypeRecord.extScaleType!=ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP) {
                             mExtScaleImageView.setExtScaleType(mLastScaleTypeRecord.extScaleType);
                         } else {
                             mExtScaleImageView.setExtScaleType(mLastScaleTypeRecord.cropperPosX, mLastScaleTypeRecord.cropperPosY);

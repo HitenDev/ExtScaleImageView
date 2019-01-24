@@ -3,18 +3,21 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:id="@+id/menu_group_scale_type">
-    <item android:id="@+id/menu_type_align_top_crop" android:title="ALIGN_TOP_CROP" />
-    <item android:id="@+id/menu_type_align_bottom_crop" android:title="ALIGN_BOTTOM_CROP" />
-    <item android:id="@+id/menu_type_align_left_crop" android:title="ALIGN_LEFT_CROP" />
-    <item android:id="@+id/menu_type_align_right_crop" android:title="ALIGN_RIGHT_CROP" />
-    <item android:id="@+id/menu_type_center_crop" android:title="CENTER_CROP"/>
-    <item android:id="@+id/menu_type_center" android:title="CENTER"/>
-    <item android:id="@+id/menu_type_center_inside" android:title="CENTER_INSIDE"/>
+    <item android:id="@+id/menu_type_align_top_crop" android:title="align_top_crop" />
+    <item android:id="@+id/menu_type_align_bottom_crop" android:title="align_bottom_crop" />
+    <item android:id="@+id/menu_type_align_left_crop" android:title="align_left_crop" />
+    <item android:id="@+id/menu_type_align_right_crop" android:title="align_right_crop" />
+    <item android:id="@+id/menu_type_fit_width_center_top_height" android:title="fit_width_center_top_height" />
 
-    <item android:id="@+id/menu_type_fit_start" android:title="FIT_START"/>
-    <item android:id="@+id/menu_type_fit_end" android:title="FIT_END"/>
-    <item android:id="@+id/menu_type_fit_center" android:title="FIT_CENTER"/>
-    <item android:id="@+id/menu_type_fit_xy" android:title="FIT_XY"/>
+
+    <item android:id="@+id/menu_type_center_crop" android:title="center_crop"/>
+    <item android:id="@+id/menu_type_center" android:title="center"/>
+    <item android:id="@+id/menu_type_center_inside" android:title="center_inside"/>
+
+    <item android:id="@+id/menu_type_fit_start" android:title="fit_start"/>
+    <item android:id="@+id/menu_type_fit_end" android:title="fit_end"/>
+    <item android:id="@+id/menu_type_fit_center" android:title="fit_center"/>
+    <item android:id="@+id/menu_type_fit_xy" android:title="fit_xy"/>
     </group>
     <item
         android:checkable="false"

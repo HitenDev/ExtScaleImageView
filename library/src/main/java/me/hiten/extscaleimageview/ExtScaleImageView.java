@@ -199,7 +199,7 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
         /**
          * 根据输入的点进行对齐和剪裁，取值范围[0.0-1.0]
          */
-        ALIGN_POINT_CROP(-1f, -1f),
+        ALIGN_POINT_CROP(-1.0f, -1.0f),
 
         /**
          * 顶部对齐，左右两边缩放并填充宽，底部剪裁
@@ -219,7 +219,12 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
         /**
          * 右边对齐，上下两边缩放并填充高，左边剪裁
          */
-        ALIGN_RIGHT_CROP(1f, 0.5f);
+        ALIGN_RIGHT_CROP(1.0f, 0.5f),
+
+        /**
+         * 根据宽确定缩放比，缩放后的高度如果小于等于控件高度，居中显示，否则顶部对齐剪裁
+         */
+        FIT_WIDTH_CENTER_TOP_HEIGHT(-2.0f, -2.0f);
 
         ExtScaleType(float cropperPosX, float cropperPosY) {
             this.cropperPosX = cropperPosX;
