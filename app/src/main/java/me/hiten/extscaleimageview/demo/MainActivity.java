@@ -1,28 +1,38 @@
 package me.hiten.extscaleimageview.demo;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ValueAnimator;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.DataSource;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 
 import me.hiten.extscaleimageview.ExtScaleImageView;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ExtScaleImageView extScaleImageView;
+
+    private TextView tvInfo;
+
+
+    private int cUrlIndex;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,34 +40,108 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        tvInfo = findViewById(R.id.tv_info);
         extScaleImageView = findViewById(R.id.ext_iv);
         extScaleImageView.setExtScaleType(ExtScaleImageView.ExtScaleType.ALIGN_LEFT_CROP);
+        findViewById(R.id.btn_layout_test).setOnClickListener(this);
+        nextPic();
+        extScaleImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                Drawable drawable = extScaleImageView.getDrawable();
+                if (drawable != null && drawable.getIntrinsicWidth() > 0 && drawable.getIntrinsicHeight() > 0) {
+                    extScaleImageView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                }
+                showInfo();
+            }
+        });
+    }
+
+    private void showInfo() {
+        int width = extScaleImageView.getWidth();
+        int height = extScaleImageView.getHeight();
+        Drawable drawable = extScaleImageView.getDrawable();
+        if (drawable != null) {
+            int intrinsicWidth = drawable.getIntrinsicWidth();
+            int intrinsicHeight = drawable.getIntrinsicHeight();
+
+            String text = "控件:" + width + "x" + height + "\n" + "图片:" + intrinsicWidth + "x" + intrinsicHeight;
+            tvInfo.setText(text);
+        }
+
+    }
+
+    private ValueAnimator valueAnimator;
+
+    private void small() {
+        int width = extScaleImageView.getWidth();
+        if (width <= 0) {
+            return;
+        }
+        smoothLayout(width,width/3);
+
+    }
+
+    private void big() {
+        int width = extScaleImageView.getWidth();
+        if (width <= 0) {
+            return;
+        }
+        smoothLayout(width,width*3);
+    }
+
+    private void smoothLayout(final int from,final int to){
+        if (valueAnimator!=null&&valueAnimator.isRunning()){
+            return;
+        }
+        valueAnimator = ValueAnimator.ofInt(from,to);
+        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                int animatedValue = (int) animation.getAnimatedValue();
+                if (from<to){//放大
+                    if (animatedValue==to){
+                        animatedValue = ViewGroup.LayoutParams.MATCH_PARENT;
+                    }
+                }
+                ViewGroup.LayoutParams layoutParams = extScaleImageView.getLayoutParams();
+                layoutParams.width = animatedValue;
+                extScaleImageView.requestLayout();
+            }
+        });
+        valueAnimator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                super.onAnimationEnd(animation);
+                showInfo();
+                ((ViewGroup) extScaleImageView.getParent()).setClipChildren(from<to);
+            }
+        });
+        valueAnimator.setDuration(400);
+        valueAnimator.start();
+    }
+
+
+    private void nextPic() {
         RequestOptions requestOptions = RequestOptions.noTransformation();
         Glide.with(this)
-                .load("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1548264714880&di=8f77752198a5fad278a2183977afb509&imgtype=0&src=http%3A%2F%2Fimg.kutoo8.com%2Fupload%2Fimage%2F95351812%2F001%2520%25283%2529_960x540.jpg")
+                .load(URL.URLS[cUrlIndex%URL.URLS.length])
                 .apply(requestOptions)
-                .listener(new RequestListener<Drawable>() {
+                .into(new SimpleTarget<Drawable>() {
                     @Override
-                    public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
-                        Log.e("MainActivity", "onLoadFailed: "+e.toString() );
-                        return false;
+                    public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
+                        extScaleImageView.setImageDrawable(resource);
+                        showInfo();
                     }
-
-                    @Override
-                    public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                        Log.e("MainActivity", "onLoadFailed: "+resource.toString() );
-                        return false;
-                    }
-                })
-                .into(extScaleImageView);
+                });
+        cUrlIndex++;
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.menu,menu);
-        menu.setGroupCheckable(Menu.NONE,true,true);
+        getMenuInflater().inflate(R.menu.menu, menu);
+        menu.setGroupCheckable(R.id.menu_group_scale_type, true, true);
         menu.findItem(R.id.menu_type_align_left_crop).setChecked(true);
         return true;
     }
@@ -65,9 +149,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         super.onOptionsItemSelected(item);
-        item.setChecked(true);
+        if (item.isCheckable()) {
+            item.setChecked(true);
+        }
         final int itemId = item.getItemId();
-        switch (itemId){
+        switch (itemId) {
+            case R.id.menu_next_pic:
+                nextPic();
+                break;
+
             case R.id.menu_type_align_bottom_crop:
                 extScaleImageView.setExtScaleType(ExtScaleImageView.ExtScaleType.ALIGN_BOTTOM_CROP);
                 break;
@@ -103,5 +193,17 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return true;
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.getId() == R.id.btn_layout_test) {
+            int width = extScaleImageView.getLayoutParams().width;
+            if (width == ViewGroup.LayoutParams.MATCH_PARENT) {
+                small();
+            } else {
+                big();
+            }
+        }
     }
 }

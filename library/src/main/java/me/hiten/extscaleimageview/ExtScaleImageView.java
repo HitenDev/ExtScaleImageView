@@ -14,12 +14,15 @@ import android.util.AttributeSet;
  */
 public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageView {
 
-
     private ExtScaleType mExtScaleType;
+
+    private boolean mSmoothSwitch = true;
 
     private PointF mCropperPos = new PointF(-1f, -1f);
 
-    private ScaleMatrixHelper mScaleMatrixHelper;
+    ScaleMatrixHelper mScaleMatrixHelper;
+
+    private SmoothSwitchHelper mSmoothSwitchHelper;
 
     public ExtScaleImageView(Context context) {
         this(context, null);
@@ -34,23 +37,56 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
         mScaleMatrixHelper = new ScaleMatrixHelper(this);
     }
 
+    /**
+     * 开始/关闭切换动画效果
+     * @param smoothSwitch true/false
+     */
+    public void setSmoothSwitch(boolean smoothSwitch) {
+        this.mSmoothSwitch = smoothSwitch;
+    }
+
+    public boolean isSmoothSwitch() {
+        return mSmoothSwitch;
+    }
+
+    public void ensureSmoothSwitchHelper() {
+        if (mSmoothSwitchHelper == null) {
+            mSmoothSwitchHelper = new SmoothSwitchHelper(this);
+        }
+    }
 
     @Override
     public void setScaleType(ScaleType scaleType) {
-        if (scaleType != null && !ScaleType.MATRIX.equals(scaleType)) {
+        if (scaleType == null) {
+            return;
+        }
+        if (mSmoothSwitch) {
+            ensureSmoothSwitchHelper();
+            if (mSmoothSwitchHelper.consume(scaleType)) {
+                return;
+            }
+        }
+        if (!ScaleType.MATRIX.equals(scaleType)) {
             setExtScaleType(null);
         }
         super.setScaleType(scaleType);
     }
 
-
-
     public void setExtScaleType(ExtScaleType extScaleType) {
-        this.mExtScaleType = extScaleType;
         if (extScaleType == null) {
+            this.mExtScaleType = null;
             return;
         }
-        setScaleType(ScaleType.MATRIX);
+        if (mSmoothSwitch) {
+            ensureSmoothSwitchHelper();
+            if (mSmoothSwitchHelper.consume(extScaleType, extScaleType.cropperPosX, extScaleType.cropperPosY)) {
+                return;
+            }
+        }
+        this.mExtScaleType = extScaleType;
+        if (!ScaleType.MATRIX.equals(getScaleType())) {
+            setScaleType(ScaleType.MATRIX);
+        }
         updateMatrix();
     }
 
@@ -63,10 +99,17 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
     }
 
     public void setExtScaleType(@FloatRange(from = 0f, to = 1.0f) float cropperPosX, @FloatRange(from = 0f, to = 1.0f) float cropperPosY) {
+        if (mSmoothSwitch) {
+            if (mSmoothSwitchHelper.consume(ExtScaleType.ALIGN_POINT_CROP, cropperPosX, cropperPosY)) {
+                return;
+            }
+        }
         this.mExtScaleType = ExtScaleType.ALIGN_POINT_CROP;
         this.mCropperPos.x = Math.min(1.0f, Math.max(cropperPosX, 0f));
         this.mCropperPos.y = Math.min(1.0f, Math.max(cropperPosY, 0f));
-        setScaleType(ScaleType.MATRIX);
+        if (!ScaleType.MATRIX.equals(getScaleType())) {
+            setScaleType(ScaleType.MATRIX);
+        }
         updateMatrix();
     }
 
@@ -76,36 +119,45 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
         updateMatrix();
     }
 
-    private void updateMatrix(){
-        if (getWidth()<=0||getHeight()<=0){
+    private void updateMatrix() {
+        if (getWidth() <= 0 || getHeight() <= 0) {
             return;
         }
-        if (getDrawable()==null){
+        if (getDrawable() == null) {
             return;
         }
-        if (mScaleMatrixHelper!=null){
+        if (mScaleMatrixHelper != null) {
             mScaleMatrixHelper.updateMatrix();
         }
     }
 
     @Override
     public void setImageDrawable(@Nullable Drawable drawable) {
+        if (mSmoothSwitchHelper != null) {
+            mSmoothSwitchHelper.clean();
+        }
         super.setImageDrawable(drawable);
         updateMatrix();
     }
+
+    private static final String SAVE_KEY_SUPER_STATE = "superState";
+    private static final String SAVE_KEY_EXT_SCALE_TYPE_X = "extScaleTypeX";
+    private static final String SAVE_KEY_EXT_SCALE_TYPE_Y = "extScaleTypeY";
+    private static final String SAVE_KEY_CROPPER_POS_X = "cropperPosX";
+    private static final String SAVE_KEY_CROPPER_POS_Y = "cropperPosY";
 
     @Override
     protected Parcelable onSaveInstanceState() {
         Parcelable parcelable = super.onSaveInstanceState();
         Bundle bundle = new Bundle();
-        bundle.putParcelable("superState", parcelable);
+        bundle.putParcelable(SAVE_KEY_SUPER_STATE, parcelable);
         if (mExtScaleType != null) {
-            bundle.putFloat("extScaleTypeX", mExtScaleType.cropperPosX);
-            bundle.putFloat("extScaleTypeY", mExtScaleType.cropperPosY);
+            bundle.putFloat(SAVE_KEY_EXT_SCALE_TYPE_X, mExtScaleType.cropperPosX);
+            bundle.putFloat(SAVE_KEY_EXT_SCALE_TYPE_Y, mExtScaleType.cropperPosY);
         }
         if (mCropperPos != null) {
-            bundle.putFloat("cropperPosX", mCropperPos.x);
-            bundle.putFloat("cropperPosY", mCropperPos.y);
+            bundle.putFloat(SAVE_KEY_CROPPER_POS_X, mCropperPos.x);
+            bundle.putFloat(SAVE_KEY_CROPPER_POS_Y, mCropperPos.y);
         }
         return bundle;
     }
@@ -114,16 +166,29 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
     protected void onRestoreInstanceState(Parcelable state) {
         if (state instanceof Bundle) {
             Bundle bundle = (Bundle) state;
-            float extScaleTypeX = bundle.getFloat("extScaleTypeX", -99f);
-            float extScaleTypeY = bundle.getFloat("extScaleTypeY", -99f);
+            float extScaleTypeX = bundle.getFloat(SAVE_KEY_EXT_SCALE_TYPE_X, -99f);
+            float extScaleTypeY = bundle.getFloat(SAVE_KEY_EXT_SCALE_TYPE_Y, -99f);
             mExtScaleType = ExtScaleType.valueOf(extScaleTypeX, extScaleTypeY);
 
-            float cropperPosX = bundle.getFloat("cropperPosX", -1f);
-            float cropperPosY = bundle.getFloat("cropperPosY", -1f);
-            mCropperPos = new PointF(cropperPosX,cropperPosY);
-            state = bundle.getParcelable("superState");
+            float cropperPosX = bundle.getFloat(SAVE_KEY_CROPPER_POS_X, -1f);
+            float cropperPosY = bundle.getFloat(SAVE_KEY_CROPPER_POS_Y, -1f);
+            mCropperPos = new PointF(cropperPosX, cropperPosY);
+            state = bundle.getParcelable(SAVE_KEY_SUPER_STATE);
         }
         super.onRestoreInstanceState(state);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (mSmoothSwitchHelper != null) {
+            mSmoothSwitchHelper.clean();
+        }
     }
 
     /**
@@ -163,6 +228,7 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
 
         /**
          * 通过参数得到枚举类型
+         *
          * @param cropperPosX x crop param
          * @param cropperPosY y crop param
          * @return 枚举
@@ -179,6 +245,10 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
 
         boolean valueEquals(float cropperPosX, float cropperPosY) {
             return this.cropperPosX == cropperPosX && this.cropperPosY == cropperPosY;
+        }
+
+        boolean available() {
+            return !this.equals(ALIGN_POINT_CROP) || (cropperPosX >= 0 && cropperPosY >= 0);
         }
 
 

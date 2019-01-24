@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".MainActivity"
-    android:orientation="vertical">
+    android:clipChildren="true"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
 
 
     <android.support.design.widget.AppBarLayout
+        android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:theme="@style/AppTheme.AppBarOverlay">
+        android:theme="@style/AppTheme.AppBarOverlay"
+        app:layout_constraintTop_toTopOf="parent">
 
         <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar"
@@ -21,24 +24,63 @@
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     </android.support.design.widget.AppBarLayout>
-    <RelativeLayout
-        android:clipChildren="false"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+
 
     <me.hiten.extscaleimageview.ExtScaleImageView
-        android:layout_centerInParent="true"
         android:id="@+id/ext_iv"
-        android:layout_width="150dp"
-        android:layout_height="150dp"
-        />
+        app:layout_constraintDimensionRatio="1.0"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_centerInParent="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <View
-            android:layout_centerInParent="true"
-            android:background="@drawable/bg_border_red"
-            android:layout_width="150dp"
-            android:layout_height="150dp" />
-    </RelativeLayout>
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_centerInParent="true"
+        android:background="@drawable/bg_border_red"
+        app:layout_constraintBottom_toBottomOf="@id/ext_iv"
+        app:layout_constraintLeft_toLeftOf="@id/ext_iv"
+        app:layout_constraintRight_toRightOf="@id/ext_iv"
+        app:layout_constraintTop_toTopOf="@id/ext_iv" />
 
 
-</LinearLayout>
+    <TextView
+        android:textSize="12sp"
+        android:textColor="@color/colorAccent"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:text="红色方框代表控件边界\n小图模式显示剪裁部分"
+        app:layout_constraintTop_toBottomOf="@id/appbar"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:textSize="12sp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="15dp"
+        android:id="@+id/tv_info"
+        android:textColor="#333333"
+        app:layout_constraintTop_toBottomOf="@id/appbar"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:text="大/小图视角切换"
+        android:layout_marginBottom="20dp"
+        android:id="@+id/btn_layout_test"
+        app:layout_constraintDimensionRatio="1.0"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+
+</android.support.constraint.ConstraintLayout>

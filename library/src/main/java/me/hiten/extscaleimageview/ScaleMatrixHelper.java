@@ -1,53 +1,69 @@
 package me.hiten.extscaleimageview;
 
 import android.graphics.Matrix;
-import android.graphics.PointF;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
 /**
  * 矩阵计算辅助类
  */
-public class ScaleMatrixHelper {
+class ScaleMatrixHelper {
 
 
     private ExtScaleImageView mExtScaleImageView;
 
-    public ScaleMatrixHelper(ExtScaleImageView extScaleImageView) {
+    ScaleMatrixHelper(ExtScaleImageView extScaleImageView) {
         mExtScaleImageView = extScaleImageView;
     }
 
-    public void updateMatrix() {
+    void updateMatrix() {
         ExtScaleImageView.ExtScaleType extScaleType = mExtScaleImageView.getExtScaleType();
-        if (extScaleType==null){
+        if (extScaleType == null) {
             return;
         }
-        float cropperPosX = extScaleType.cropperPosX;
-        float cropperPosY = extScaleType.cropperPosX;
-        if (ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP.equals(extScaleType)){
-            PointF extCropperPos = mExtScaleImageView.getExtCropperPos();
-            cropperPosX = extCropperPos.x;
-            cropperPosY = extCropperPos.y;
-        }
-        calculateMatrix(ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP,cropperPosX,cropperPosY);
-
+        calculateMatrix();
     }
 
-    private void calculateMatrix(ExtScaleImageView.ExtScaleType extScaleType, float cropperPosX, float cropperPosY) {
-        final int vWidth = mExtScaleImageView.getWidth() - mExtScaleImageView.getPaddingLeft() - mExtScaleImageView.getPaddingLeft();
-        final int vHeight = mExtScaleImageView.getHeight() - mExtScaleImageView.getPaddingTop() - mExtScaleImageView.getPaddingBottom();
-        if (vWidth<=0||vHeight<=0){
+
+    /**
+     * 根据ExtScaleType计算矩阵
+     *
+     * @param inMatrix     接收结果的矩阵
+     * @param extScaleType ScaleType
+     * @param cropperPosX  cropperPosX
+     * @param cropperPosY  cropperPosY
+     */
+    void calculateMatrix(Matrix inMatrix, ExtScaleImageView.ExtScaleType extScaleType, float cropperPosX, float cropperPosY) {
+        if (inMatrix == null) {
             return;
         }
+        if (extScaleType == null) {
+            return;
+        }
+
+        if (!Utils.viewHasSize(mExtScaleImageView)) {
+            return;
+        }
+
         Drawable drawable = mExtScaleImageView.getDrawable();
-        if (drawable==null){
+        if (!Utils.drawableHasSize(drawable)) {
             return;
         }
+
+        if (!ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP.equals(extScaleType)) {
+            cropperPosX = extScaleType.cropperPosX;
+            cropperPosY = extScaleType.cropperPosY;
+            extScaleType = ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP;
+        }
+
+
+        final int vWidth = Utils.getWidht(mExtScaleImageView);
+        final int vHeight = Utils.getHeight(mExtScaleImageView);
+
         int dWidth = drawable.getIntrinsicWidth();
         int dHeight = drawable.getIntrinsicHeight();
-        if (dWidth <= 0 || dHeight <= 0) {
-            return;
-        }
+
         if (ExtScaleImageView.ExtScaleType.ALIGN_POINT_CROP.equals(extScaleType)) {
             float scale;
             float dx = 0, dy = 0;
@@ -60,14 +76,77 @@ public class ScaleMatrixHelper {
                 dy = (vHeight - dHeight * scale) * cropperPosY;
             }
 
-            Matrix imageMatrix = new Matrix();
-            imageMatrix.setScale(scale, scale);
-            imageMatrix.postTranslate(Math.round(dx), Math.round(dy));
-            if (mExtScaleImageView.getScaleType() != ImageView.ScaleType.MATRIX) {
-                mExtScaleImageView.setScaleType(ImageView.ScaleType.MATRIX);
-            }
-            mExtScaleImageView.setImageMatrix(imageMatrix);
+            inMatrix.setScale(scale, scale);
+            inMatrix.postTranslate(Math.round(dx), Math.round(dy));
         }
+    }
+
+
+    /**
+     * 根据ScaleType计算矩阵
+     *
+     * @param inMatrix  接收结果的矩阵
+     * @param scaleType ScaleType
+     */
+    void calculateMatrix(Matrix inMatrix, ImageView.ScaleType scaleType) {
+        Drawable drawable = mExtScaleImageView.getDrawable();
+        if (!Utils.drawableHasSize(drawable)) {
+            return;
+        }
+        if (!Utils.viewHasSize(mExtScaleImageView)) {
+            return;
+        }
+
+        final float viewWidth = Utils.getWidht(mExtScaleImageView);
+        final float viewHeight = Utils.getHeight(mExtScaleImageView);
+        final int drawableWidth = drawable.getIntrinsicWidth();
+        final int drawableHeight = drawable.getIntrinsicHeight();
+        inMatrix.reset();
+        final float widthScale = viewWidth / drawableWidth;
+        final float heightScale = viewHeight / drawableHeight;
+        if (scaleType == ImageView.ScaleType.CENTER) {
+            inMatrix.postTranslate((viewWidth - drawableWidth) / 2F,
+                    (viewHeight - drawableHeight) / 2F);
+
+        } else if (scaleType == ImageView.ScaleType.CENTER_CROP) {
+            float scale = Math.max(widthScale, heightScale);
+            inMatrix.postScale(scale, scale);
+            inMatrix.postTranslate((viewWidth - drawableWidth * scale) / 2F,
+                    (viewHeight - drawableHeight * scale) / 2F);
+
+        } else if (scaleType == ImageView.ScaleType.CENTER_INSIDE) {
+            float scale = Math.min(1.0f, Math.min(widthScale, heightScale));
+            inMatrix.postScale(scale, scale);
+            inMatrix.postTranslate((viewWidth - drawableWidth * scale) / 2F,
+                    (viewHeight - drawableHeight * scale) / 2F);
+
+        } else {
+            RectF mTempSrc = new RectF(0, 0, drawableWidth, drawableHeight);
+            RectF mTempDst = new RectF(0, 0, viewWidth, viewHeight);
+
+            switch (scaleType) {
+                case FIT_CENTER:
+                    inMatrix.setRectToRect(mTempSrc, mTempDst, Matrix.ScaleToFit.CENTER);
+                    break;
+                case FIT_START:
+                    inMatrix.setRectToRect(mTempSrc, mTempDst, Matrix.ScaleToFit.START);
+                    break;
+                case FIT_END:
+                    inMatrix.setRectToRect(mTempSrc, mTempDst, Matrix.ScaleToFit.END);
+                    break;
+                case FIT_XY:
+                    inMatrix.setRectToRect(mTempSrc, mTempDst, Matrix.ScaleToFit.FILL);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    private void calculateMatrix() {
+        Matrix matrix = mExtScaleImageView.getImageMatrix();
+        calculateMatrix(matrix, mExtScaleImageView.getExtScaleType(), mExtScaleImageView.getExtCropperPos().x, mExtScaleImageView.getExtCropperPos().y);
+        mExtScaleImageView.setImageMatrix(matrix);
     }
 
 }
