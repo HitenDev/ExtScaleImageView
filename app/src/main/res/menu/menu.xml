@@ -9,6 +9,7 @@
     <item android:id="@+id/menu_type_align_right_crop" android:title="align_right_crop" />
     <item android:id="@+id/menu_type_fit_width_center_top_height" android:title="fit_width_center_top_height" />
 
+        <item android:id="@+id/menu_type_align_point_crop" android:title="align_point_crop" />
 
     <item android:id="@+id/menu_type_center_crop" android:title="center_crop"/>
     <item android:id="@+id/menu_type_center" android:title="center"/>

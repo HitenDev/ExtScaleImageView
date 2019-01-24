@@ -15,10 +15,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.bitmap.CenterCrop;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
@@ -31,6 +31,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ExtScaleImageView extScaleImageView;
 
     private TextView tvInfo;
+
+    private SeekBar seekBarX;
+    private SeekBar seekBarY;
+
+    private TextView seekBarTv;
 
 
     private int cUrlIndex;
@@ -45,6 +50,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         extScaleImageView = findViewById(R.id.ext_iv);
         extScaleImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
         findViewById(R.id.btn_layout_test).setOnClickListener(this);
+        seekBarX = findViewById(R.id.seek_bar_x);
+        seekBarY = findViewById(R.id.seek_bar_y);
+        seekBarTv = findViewById(R.id.seek_bar_ratio);
+        listenerSeekBar();
         nextPic();
         extScaleImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -56,6 +65,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 showInfo();
             }
         });
+    }
+
+    private float seekX;
+    private float seekY;
+
+    private void listenerSeekBar(){
+        SeekBar.OnSeekBarChangeListener onSeekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                float max = seekBar.getMax();
+                float ratio = progress / max;
+                if (seekBar==seekBarX){
+                    seekX = ratio;
+                }else {
+                    seekY = ratio;
+                }
+                extScaleImageView.setExtScaleType(seekX,seekY);
+                seekBarTv.setText("x:"+seekX+" y:"+seekY);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        };
+        seekBarX.setOnSeekBarChangeListener(onSeekBarChangeListener);
+        seekBarY.setOnSeekBarChangeListener(onSeekBarChangeListener);
     }
 
     private void showInfo() {
@@ -154,9 +195,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             item.setChecked(true);
         }
         final int itemId = item.getItemId();
+        if (itemId == R.id.menu_type_align_point_crop) {
+            int width = extScaleImageView.getLayoutParams().width;
+            if (width == ViewGroup.LayoutParams.MATCH_PARENT) {
+                small();
+            }
+            findViewById(R.id.btn_layout_test).setVisibility(View.GONE);
+            seekBarX.setVisibility(View.VISIBLE);
+            seekBarY.setVisibility(View.VISIBLE);
+            seekBarTv.setVisibility(View.VISIBLE);
+            extScaleImageView.setSmoothSwitch(false);
+            extScaleImageView.setExtScaleType(0,0);
+            return true;
+        }
+        if (itemId !=R.id.menu_next_pic){
+            findViewById(R.id.btn_layout_test).setVisibility(View.VISIBLE);
+            seekBarX.setVisibility(View.GONE);
+            seekBarY.setVisibility(View.GONE);
+            seekBarTv.setVisibility(View.GONE);
+            extScaleImageView.setSmoothSwitch(true);
+        }
         switch (itemId) {
             case R.id.menu_next_pic:
                 nextPic();
+                seekBarX.setProgress(0);
+                seekBarY.setProgress(0);
                 break;
 
             case R.id.menu_type_align_bottom_crop:
@@ -195,6 +258,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.menu_type_fit_width_center_top_height:
                 extScaleImageView.setExtScaleType(ExtScaleImageView.ExtScaleType.FIT_WIDTH_CENTER_TOP_HEIGHT);
                 break;
+
         }
         return true;
     }
