@@ -11,7 +11,7 @@
     <Button
         android:id="@+id/btn_ext_iv"
         style="@style/style_home_item_btn"
-        android:text="演示扩展ScaleType" />
+        android:text="基本功能演示" />
 
     <View
         android:layout_width="match_parent"
@@ -19,7 +19,7 @@
         android:background="#eeeeee" />
 
     <Button
-        android:id="@+id/btn_jike"
+        android:id="@+id/btn_nine_grid"
         style="@style/style_home_item_btn"
-        android:text="Demo仿即刻列表" />
+        android:text="(即刻/微博)九宫格效果" />
 </LinearLayout>

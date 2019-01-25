@@ -60,7 +60,7 @@ public class ExtImageViewActivity extends AppCompatActivity implements View.OnCl
         setContentView(R.layout.activity_ext_imageview);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("扩展ScaleType");
+        getSupportActionBar().setTitle("基本功能");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         tvInfo = findViewById(R.id.tv_info);

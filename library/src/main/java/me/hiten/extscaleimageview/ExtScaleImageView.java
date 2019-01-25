@@ -26,6 +26,11 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
     private boolean mSmoothSwitch = false;
 
     /**
+     * 是否开启获取原始ScaleType
+     */
+    private boolean mGetScaleType = false;
+
+    /**
      * Point控制点
      */
     private PointF mCropperPos = new PointF(-1f, -1f);
@@ -73,6 +78,20 @@ public class ExtScaleImageView extends android.support.v7.widget.AppCompatImageV
         }
         //将ScaleType转成ExtScaleType
         setExtScaleType(ExtScaleType.valueOf(scaleType.name()));
+    }
+
+    @Override
+    public ScaleType getScaleType() {
+        if (mGetScaleType && mExtScaleType != null) {
+            if (mExtScaleType.scaleType != null) {
+                return mExtScaleType.scaleType;
+            }
+            if (mExtScaleType.cropperPosX == 0.5 && mExtScaleType.cropperPosY == 0.5) {
+                return ScaleType.CENTER_CROP;
+            }
+        }
+
+        return super.getScaleType();
     }
 
     public void setExtScaleType(ExtScaleType extScaleType) {

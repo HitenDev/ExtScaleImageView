@@ -17,6 +17,8 @@ public class HomeActivity extends AppCompatActivity {
         int id = view.getId();
         if (id == R.id.btn_ext_iv) {
             startActivity(new Intent(this, ExtImageViewActivity.class));
+        } else if (id == R.id.btn_nine_grid) {
+            startActivity(new Intent(this, NineGridActivity.class));
         }
     }
 }
