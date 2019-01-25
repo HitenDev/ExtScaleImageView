@@ -6,8 +6,7 @@
     android:layout_height="match_parent"
     android:clipChildren="true"
     android:background="@android:color/white"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
+    tools:context=".ExtImageViewActivity">
 
 
     <android.support.design.widget.AppBarLayout
@@ -29,8 +28,9 @@
 
     <me.hiten.extscaleimageview.ExtScaleImageView
         android:id="@+id/ext_iv"
+        android:layout_marginBottom="100dp"
         app:layout_constraintDimensionRatio="1.0"
-        android:layout_width="match_parent"
+        android:layout_width="200dp"
         android:layout_height="0dp"
         android:layout_centerInParent="true"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -54,7 +54,7 @@
         android:textColor="@color/colorAccent"
         android:layout_marginLeft="15dp"
         android:layout_marginTop="15dp"
-        android:text="红色方框代表控件边界\n小图模式显示剪裁部分"
+        android:text="红色方框代表控件边界\n点击执行共享元素动画"
         app:layout_constraintTop_toBottomOf="@id/appbar"
         app:layout_constraintRight_toRightOf="parent"
         android:layout_width="wrap_content"
@@ -71,10 +71,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <Button
-        android:text="大/小图视角切换"
+    <CheckBox
+        android:text="显示剪裁区域"
         android:layout_marginBottom="20dp"
-        android:id="@+id/btn_layout_test"
+        android:id="@+id/ckb_clip"
         app:layout_constraintDimensionRatio="1.0"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -84,6 +84,7 @@
         app:layout_constraintRight_toRightOf="parent" />
 
     <TextView
+        android:textColor="#666666"
         android:visibility="gone"
         android:layout_marginBottom="20dp"
         app:layout_constraintBottom_toTopOf="@id/seek_bar_x"
@@ -114,7 +115,7 @@
         android:layout_marginRight="20dp"
         android:max="10"
         android:layout_marginBottom="20dp"
-        app:layout_constraintBottom_toTopOf="@id/btn_layout_test"
+        app:layout_constraintBottom_toTopOf="@id/ckb_clip"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:id="@+id/seek_bar_y"

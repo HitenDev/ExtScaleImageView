@@ -5,7 +5,7 @@ import android.view.View;
 
 public class Utils {
 
-    static boolean drawableHasSize(Drawable drawable){
+    static boolean drawableHasSize(Drawable drawable) {
         if (drawable == null) {
             return false;
         }
@@ -15,8 +15,8 @@ public class Utils {
         return true;
     }
 
-    static boolean viewHasSize(View view){
-        if (view==null){
+    static boolean viewHasSize(View view) {
+        if (view == null) {
             return false;
         }
         int width = view.getWidth();
@@ -28,15 +28,15 @@ public class Utils {
         return true;
     }
 
-    public static int getWidht(View view){
-        if (view==null){
+    public static int getWidht(View view) {
+        if (view == null) {
             return 0;
         }
         return view.getWidth() - view.getPaddingLeft() - view.getPaddingRight();
     }
 
-    public static int getHeight(View view){
-        if (view==null){
+    public static int getHeight(View view) {
+        if (view == null) {
             return 0;
         }
         return view.getHeight() - view.getPaddingTop() - view.getPaddingBottom();

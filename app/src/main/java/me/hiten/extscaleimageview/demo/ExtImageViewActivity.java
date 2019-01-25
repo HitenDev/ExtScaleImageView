@@ -1,12 +1,18 @@
 package me.hiten.extscaleimageview.demo;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ValueAnimator;
+import android.app.SharedElementCallback;
+import android.content.Intent;
+import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.view.ViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -14,6 +20,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -24,13 +32,17 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 
 import me.hiten.extscaleimageview.ExtScaleImageView;
+import me.hiten.extscaleimageview.ScaleTypeParcel;
+import me.hiten.extscaleimageview.se.SharedElementSnapshot;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class ExtImageViewActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ExtScaleImageView extScaleImageView;
 
     private TextView tvInfo;
+
+    private CheckBox checkBox;
 
     private SeekBar seekBarX;
     private SeekBar seekBarY;
@@ -38,22 +50,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView seekBarTv;
 
 
-    private int cUrlIndex;
+    private int cUrlIndex = -1;
+
+    private static boolean sFirstShow = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_ext_imageview);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle("扩展ScaleType");
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
         tvInfo = findViewById(R.id.tv_info);
         extScaleImageView = findViewById(R.id.ext_iv);
         extScaleImageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        findViewById(R.id.btn_layout_test).setOnClickListener(this);
         seekBarX = findViewById(R.id.seek_bar_x);
         seekBarY = findViewById(R.id.seek_bar_y);
         seekBarTv = findViewById(R.id.seek_bar_ratio);
-        listenerSeekBar();
+        checkBox = findViewById(R.id.ckb_clip);
+        extScaleImageView.setOnClickListener(this);
+        listener();
         nextPic();
         extScaleImageView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -65,12 +83,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 showInfo();
             }
         });
+        if (sFirstShow) {
+            extScaleImageView.post(new Runnable() {
+                @Override
+                public void run() {
+                    openOptionsMenu();
+                    sFirstShow = false;
+                }
+            });
+        }
     }
 
     private float seekX;
     private float seekY;
 
-    private void listenerSeekBar(){
+    private void listener() {
         SeekBar.OnSeekBarChangeListener onSeekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -82,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     seekY = ratio;
                 }
                 extScaleImageView.setExtScaleType(seekX,seekY);
-                seekBarTv.setText("x:"+seekX+" y:"+seekY);
+                seekBarTv.setText("cropX:" + seekX + " cropY:" + seekY);
             }
 
             @Override
@@ -97,6 +124,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         };
         seekBarX.setOnSeekBarChangeListener(onSeekBarChangeListener);
         seekBarY.setOnSeekBarChangeListener(onSeekBarChangeListener);
+
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                ((ViewGroup) extScaleImageView.getParent()).setClipChildren(!isChecked);
+            }
+        });
     }
 
     private void showInfo() {
@@ -107,76 +141,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             int intrinsicWidth = drawable.getIntrinsicWidth();
             int intrinsicHeight = drawable.getIntrinsicHeight();
 
-            String text = "控件:" + width + "x" + height + "\n" + "图片:" + intrinsicWidth + "x" + intrinsicHeight;
+            String text = "控件尺寸:" + width + "x" + height + "\n" + "图片尺寸:" + intrinsicWidth + "x" + intrinsicHeight;
             tvInfo.setText(text);
         }
 
     }
 
-    private ValueAnimator valueAnimator;
-
-    private void small() {
-        int width = extScaleImageView.getWidth();
-        if (width <= 0) {
-            return;
-        }
-        smoothLayout(width,width/3);
-
+    private String getUrl() {
+        return URL.URLS[cUrlIndex % URL.URLS.length];
     }
-
-    private void big() {
-        int width = extScaleImageView.getWidth();
-        if (width <= 0) {
-            return;
-        }
-        smoothLayout(width,width*3);
-    }
-
-    private void smoothLayout(final int from,final int to){
-        if (valueAnimator!=null&&valueAnimator.isRunning()){
-            return;
-        }
-        valueAnimator = ValueAnimator.ofInt(from,to);
-        valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                int animatedValue = (int) animation.getAnimatedValue();
-                if (from<to){//放大
-                    if (animatedValue==to){
-                        animatedValue = ViewGroup.LayoutParams.MATCH_PARENT;
-                    }
-                }
-                ViewGroup.LayoutParams layoutParams = extScaleImageView.getLayoutParams();
-                layoutParams.width = animatedValue;
-                extScaleImageView.requestLayout();
-            }
-        });
-        valueAnimator.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                super.onAnimationEnd(animation);
-                showInfo();
-                ((ViewGroup) extScaleImageView.getParent()).setClipChildren(from<to);
-            }
-        });
-        valueAnimator.setDuration(400);
-        valueAnimator.start();
-    }
-
 
     private void nextPic() {
+        cUrlIndex++;
+        final String url = getUrl();
         RequestOptions requestOptions = RequestOptions.noTransformation();
         Glide.with(this)
-                .load(URL.URLS[cUrlIndex%URL.URLS.length])
+                .load(url)
                 .apply(requestOptions)
                 .into(new SimpleTarget<Drawable>() {
                     @Override
                     public void onResourceReady(@NonNull Drawable resource, @Nullable Transition<? super Drawable> transition) {
                         extScaleImageView.setImageDrawable(resource);
+                        ViewCompat.setTransitionName(extScaleImageView, url);
                         showInfo();
                     }
                 });
-        cUrlIndex++;
     }
 
     @Override
@@ -195,12 +184,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             item.setChecked(true);
         }
         final int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
         if (itemId == R.id.menu_type_align_point_crop) {
-            int width = extScaleImageView.getLayoutParams().width;
-            if (width == ViewGroup.LayoutParams.MATCH_PARENT) {
-                small();
-            }
-            findViewById(R.id.btn_layout_test).setVisibility(View.GONE);
             seekBarX.setVisibility(View.VISIBLE);
             seekBarY.setVisibility(View.VISIBLE);
             seekBarTv.setVisibility(View.VISIBLE);
@@ -209,7 +197,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             return true;
         }
         if (itemId !=R.id.menu_next_pic){
-            findViewById(R.id.btn_layout_test).setVisibility(View.VISIBLE);
             seekBarX.setVisibility(View.GONE);
             seekBarY.setVisibility(View.GONE);
             seekBarTv.setVisibility(View.GONE);
@@ -265,13 +252,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
-        if (view.getId() == R.id.btn_layout_test) {
-            int width = extScaleImageView.getLayoutParams().width;
-            if (width == ViewGroup.LayoutParams.MATCH_PARENT) {
-                small();
-            } else {
-                big();
+        int viewId = view.getId();
+        if (viewId == R.id.ext_iv) {
+            Intent intent = new Intent(this, SimpleDetailActivity.class);
+            intent.putExtra("url", getUrl());
+            intent.putExtra("scale_type_parcel", new ScaleTypeParcel(extScaleImageView));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                setExitSharedElementCallback(new SharedElementCallback() {
+                    @Override
+                    public Parcelable onCaptureSharedElementSnapshot(View sharedElement, Matrix viewToGlobalMatrix, RectF screenBounds) {
+                        if (sharedElement instanceof ExtScaleImageView) {
+                            ScaleTypeParcel scaleTypeParcel = new ScaleTypeParcel((ExtScaleImageView) sharedElement);
+                            Parcelable snapshot = super.onCaptureSharedElementSnapshot(sharedElement, viewToGlobalMatrix, screenBounds);
+                            return new SharedElementSnapshot(snapshot, scaleTypeParcel);
+                        }
+
+                        return super.onCaptureSharedElementSnapshot(sharedElement, viewToGlobalMatrix, screenBounds);
+                    }
+
+                });
             }
+            ActivityOptionsCompat activityOptionsCompat = ActivityOptionsCompat.makeSceneTransitionAnimation(this, extScaleImageView, getUrl());
+            ActivityCompat.startActivity(this, intent, activityOptionsCompat.toBundle());
         }
     }
 }

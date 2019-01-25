@@ -22,7 +22,7 @@
     </group>
     <item
         android:checkable="false"
-        android:title="下一张"
+        android:title="换个图"
         android:id="@+id/menu_next_pic"
         android:orderInCategory="90"
         app:showAsAction="ifRoom" />

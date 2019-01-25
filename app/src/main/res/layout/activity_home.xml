@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="20dp"
+    tools:context=".HomeActivity">
+
+
+    <Button
+        android:id="@+id/btn_ext_iv"
+        style="@style/style_home_item_btn"
+        android:text="演示扩展ScaleType" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#eeeeee" />
+
+    <Button
+        android:id="@+id/btn_jike"
+        style="@style/style_home_item_btn"
+        android:text="Demo仿即刻列表" />
+</LinearLayout>
